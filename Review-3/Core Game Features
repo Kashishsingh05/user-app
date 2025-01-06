@@ -1,0 +1,89 @@
+import javax.swing.*;
+import java.awt.*;
+
+public class RockPaperScissors extends JFrame {
+    private int playerScore = 0, computerScore = 0;
+    private JLabel scoreLabel, resultLabel;
+    private JButton rockButton, paperButton, scissorsButton, resetButton;
+
+    public RockPaperScissors() {
+        setTitle("Rock Paper Scissors");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(10, 10));
+        
+        // Score display
+        scoreLabel = new JLabel("Player: 0 | Computer: 0");
+        add(scoreLabel, BorderLayout.NORTH);
+        
+        // Game buttons
+        JPanel buttonPanel = new JPanel();
+        rockButton = new JButton("Rock");
+        paperButton = new JButton("Paper");
+        scissorsButton = new JButton("Scissors");
+        resetButton = new JButton("Reset Game");
+        
+        buttonPanel.add(rockButton);
+        buttonPanel.add(paperButton);
+        buttonPanel.add(scissorsButton);
+        buttonPanel.add(resetButton);
+        add(buttonPanel, BorderLayout.CENTER);
+        
+        // Result display
+        resultLabel = new JLabel("Choose your move!");
+        add(resultLabel, BorderLayout.SOUTH);
+        
+        // Basic game logic
+        rockButton.addActionListener(e -> playGame("Rock"));
+        paperButton.addActionListener(e -> playGame("Paper"));
+        scissorsButton.addActionListener(e -> playGame("Scissors"));
+        resetButton.addActionListener(e -> resetGame());
+        
+        pack();
+        setLocationRelativeTo(null);
+    }
+    
+    private void playGame(String playerChoice) {
+        String[] choices = {"Rock", "Paper", "Scissors"};
+        String computerChoice = choices[(int)(Math.random() * 3)];
+        
+        // Determine winner
+        String result = determineWinner(playerChoice, computerChoice);
+        
+        // Update score and display
+        updateScore(result);
+        resultLabel.setText("Player chose " + playerChoice + 
+                          ", Computer chose " + computerChoice + 
+                          ". " + result);
+        scoreLabel.setText("Player: " + playerScore + 
+                         " | Computer: " + computerScore);
+    }
+    
+    private String determineWinner(String playerChoice, String computerChoice) {
+        if (playerChoice.equals(computerChoice)) {
+            return "It's a tie!";
+        }
+        
+        if ((playerChoice.equals("Rock") && computerChoice.equals("Scissors")) ||
+            (playerChoice.equals("Paper") && computerChoice.equals("Rock")) ||
+            (playerChoice.equals("Scissors") && computerChoice.equals("Paper"))) {
+            playerScore++;
+            return "You win!";
+        } else {
+            computerScore++;
+            return "Computer wins!";
+        }
+    }
+    
+    private void resetGame() {
+        playerScore = 0;
+        computerScore = 0;
+        scoreLabel.setText("Player: 0 | Computer: 0");
+        resultLabel.setText("Game Reset - Choose your move!");
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new RockPaperScissors().setVisible(true);
+        });
+    }
+}

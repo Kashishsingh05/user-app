@@ -1,0 +1,163 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class RockPaperScissors extends JFrame {
+    private JButton rockButton, paperButton, scissorsButton, resetButton;
+    private JLabel scoreLabel, resultLabel;
+    private int playerScore = 0, computerScore = 0;
+    private boolean gameActive = true;
+    private Timer animationTimer;
+
+    public RockPaperScissors() {
+        initializeUI();
+        setupEventHandlers();
+    }
+
+    private void setupEventHandlers() {
+        // Button click events
+        rockButton.addActionListener(e -> processMove("Rock"));
+        paperButton.addActionListener(e -> processMove("Paper"));
+        scissorsButton.addActionListener(e -> processMove("Scissors"));
+        resetButton.addActionListener(e -> resetGame());
+
+        // Keyboard shortcuts
+        setupKeyboardBindings();
+
+        // Mouse hover effects
+        setupMouseListeners();
+
+        // Animation timer
+        animationTimer = new Timer(500, e -> updateAnimation());
+        
+        // Window events
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                handleGameExit();
+            }
+        });
+    }
+
+    private void setupKeyboardBindings() {
+        // Root pane key bindings
+        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getRootPane().getActionMap();
+
+        // Keyboard shortcuts
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "rock");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), "paper");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "scissors");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK), "new_game");
+
+        // Actions for shortcuts
+        actionMap.put("rock", new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                if (gameActive) processMove("Rock");
+            }
+        });
+        // Similar actions for paper and scissors...
+    }
+
+    private void setupMouseListeners() {
+        MouseAdapter buttonHoverEffect = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                JButton button = (JButton)e.getSource();
+                button.setBackground(new Color(200, 200, 255));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                JButton button = (JButton)e.getSource();
+                button.setBackground(UIManager.getColor("Button.background"));
+            }
+        };
+
+        rockButton.addMouseListener(buttonHoverEffect);
+        paperButton.addMouseListener(buttonHoverEffect);
+        scissorsButton.addMouseListener(buttonHoverEffect);
+    }
+
+    private void processMove(String playerMove) {
+        if (!gameActive) return;
+
+        SwingWorker<String, Void> gameWorker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() {
+                // Simulate processing time
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                return generateComputerMove();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    String computerMove = get();
+                    updateGameState(playerMove, computerMove);
+                    updateUI();
+                } catch (Exception ex) {
+                    handleError("Error processing move: " + ex.getMessage());
+                }
+            }
+        };
+
+        gameWorker.execute();
+    }
+
+    private void updateGameState(String playerMove, String computerMove) {
+        String result = calculateResult(playerMove, computerMove);
+        updateScore(result);
+        animateResult();
+    }
+
+    private void updateUI() {
+        SwingUtilities.invokeLater(() -> {
+            scoreLabel.setText("Player: " + playerScore + " | Computer: " + computerScore);
+            validateGameState();
+        });
+    }
+
+    private void animateResult() {
+        animationTimer.restart();
+    }
+
+    private void updateAnimation() {
+        // Animation logic here
+        if (resultLabel.getForeground() == Color.BLACK) {
+            resultLabel.setForeground(Color.BLUE);
+        } else {
+            resultLabel.setForeground(Color.BLACK);
+            animationTimer.stop();
+        }
+    }
+
+    private void handleGameExit() {
+        int response = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to exit?",
+            "Confirm Exit",
+            JOptionPane.YES_NO_OPTION
+        );
+        
+        if (response == JOptionPane.YES_OPTION) {
+            cleanup();
+            dispose();
+        }
+    }
+
+    private void cleanup() {
+        animationTimer.stop();
+        gameActive = false;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new RockPaperScissors().setVisible(true);
+        });
+    }
+}

@@ -1,0 +1,135 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+public class RockPaperScissors extends JFrame {
+    private int playerScore = 0, computerScore = 0;
+    private JLabel scoreLabel, resultLabel;
+    private JButton rockButton, paperButton, scissorsButton;
+    private boolean isGameActive = true;
+    
+    public RockPaperScissors() {
+        try {
+            initializeUI();
+            setupErrorHandling();
+        } catch (Exception e) {
+            handleFatalError("Failed to initialize game", e);
+        }
+    }
+
+    private void initializeUI() {
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setLayout(new BorderLayout());
+        createComponents();
+    }
+
+    private void setupErrorHandling() {
+        // Window closing confirmation
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                confirmExit();
+            }
+        });
+
+        // General exception handler
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            handleUnexpectedError(throwable);
+        });
+    }
+
+    private void createComponents() {
+        try {
+            setupGameButtons();
+            setupDisplayLabels();
+            pack();
+            setLocationRelativeTo(null);
+        } catch (Exception e) {
+            handleFatalError("Failed to create game components", e);
+        }
+    }
+
+    private void playGame(String playerChoice) {
+        if (!isGameActive) {
+            showError("Game is not active", "Please restart the application");
+            return;
+        }
+
+        try {
+            validateMove(playerChoice);
+            String computerChoice = generateComputerChoice();
+            processGameResult(playerChoice, computerChoice);
+        } catch (IllegalArgumentException e) {
+            showError("Invalid Move", e.getMessage());
+        } catch (Exception e) {
+            handleUnexpectedError(e);
+        }
+    }
+
+    private void validateMove(String move) {
+        if (!isValidMove(move)) {
+            throw new IllegalArgumentException("Invalid move: " + move);
+        }
+    }
+
+    private boolean isValidMove(String move) {
+        return move != null && 
+               (move.equals("Rock") || 
+                move.equals("Paper") || 
+                move.equals("Scissors"));
+    }
+
+    private void handleUnexpectedError(Throwable e) {
+        isGameActive = false;
+        showError("Unexpected Error", 
+                 "An error occurred: " + e.getMessage() + 
+                 "\nPlease restart the game.");
+        e.printStackTrace();
+    }
+
+    private void handleFatalError(String message, Exception e) {
+        JOptionPane.showMessageDialog(this, 
+            message + ": " + e.getMessage(),
+            "Fatal Error",
+            JOptionPane.ERROR_MESSAGE);
+        System.exit(1);
+    }
+
+    private void showError(String title, String message) {
+        JOptionPane.showMessageDialog(this, 
+            message, 
+            title, 
+            JOptionPane.WARNING_MESSAGE);
+    }
+
+    private void confirmExit() {
+        int response = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to exit?",
+            "Confirm Exit", 
+            JOptionPane.YES_NO_OPTION);
+            
+        if (response == JOptionPane.YES_OPTION) {
+            dispose();
+            System.exit(0);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new RockPaperScissors().setVisible(true);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null,
+                        "Failed to start game: " + e.getMessage(),
+                        "Startup Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        } catch (Exception e) {
+            System.err.println("Critical error during startup: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+}

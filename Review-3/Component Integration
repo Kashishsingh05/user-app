@@ -1,0 +1,90 @@
+import javax.swing.*;
+import java.awt.*;
+
+public class RockPaperScissors extends JFrame {
+    private final GamePanel gamePanel;
+    private final ScorePanel scorePanel;
+    private final ControlPanel controlPanel;
+    
+    public RockPaperScissors() {
+        setTitle("Rock Paper Scissors");
+        setLayout(new BorderLayout(10, 10));
+        
+        scorePanel = new ScorePanel();
+        gamePanel = new GamePanel();
+        controlPanel = new ControlPanel();
+        
+        add(scorePanel, BorderLayout.NORTH);
+        add(gamePanel, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.SOUTH);
+        
+        pack();
+        setLocationRelativeTo(null);
+    }
+    
+    private class GamePanel extends JPanel {
+        private final JButton[] gameButtons;
+        
+        public GamePanel() {
+            setLayout(new GridLayout(1, 3, 10, 10));
+            setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            
+            gameButtons = new JButton[3];
+            String[] buttonLabels = {"Rock", "Paper", "Scissors"};
+            
+            for (int i = 0; i < buttonLabels.length; i++) {
+                gameButtons[i] = createGameButton(buttonLabels[i]);
+                add(gameButtons[i]);
+            }
+        }
+        
+        private JButton createGameButton(String label) {
+            JButton button = new JButton(label);
+            button.setFont(new Font("Arial", Font.BOLD, 16));
+            return button;
+        }
+    }
+    
+    private class ScorePanel extends JPanel {
+        private final JLabel scoreLabel;
+        private final JLabel titleLabel;
+        
+        public ScorePanel() {
+            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+            setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            titleLabel = new JLabel("Rock Paper Scissors");
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+            titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            scoreLabel = new JLabel("Player: 0 | Computer: 0");
+            scoreLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+            scoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            
+            add(titleLabel);
+            add(Box.createRigidArea(new Dimension(0, 10)));
+            add(scoreLabel);
+        }
+    }
+    
+    private class ControlPanel extends JPanel {
+        private final JButton resetButton;
+        private final JLabel resultLabel;
+        
+        public ControlPanel() {
+            setLayout(new FlowLayout(FlowLayout.CENTER));
+            setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            
+            resetButton = new JButton("Reset Game");
+            resultLabel = new JLabel("Choose your move!");
+            resultLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+            
+            add(resetButton);
+            add(resultLabel);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new RockPaperScissors().setVisible(true));
+    }
+}
