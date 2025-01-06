@@ -1,0 +1,179 @@
+import javax.swing.*;
+import java.awt.*;
+import javax.sound.sampled.*;
+import java.util.logging.*;
+import java.util.*;
+
+// Main Game Controller using MVC Pattern
+public class RockPaperScissorsGame {
+    private GameModel model;
+    private GameView view;
+    private GameController controller;
+    private static final Logger LOGGER = Logger.getLogger(RockPaperScissorsGame.class.getName());
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                new RockPaperScissorsGame().start();
+            } catch (Exception e) {
+                LOGGER.severe("Failed to start game: " + e.getMessage());
+            }
+        });
+    }
+
+    public void start() {
+        model = new GameModel();
+        view = new GameView();
+        controller = new GameController(model, view);
+        view.setVisible(true);
+    }
+}
+
+// Model Class
+class GameModel extends Observable {
+    private int playerScore;
+    private int computerScore;
+    private GameDifficulty difficulty;
+    private List<GameRound> gameHistory;
+    private DataValidator validator;
+
+    public GameModel() {
+        validator = new DataValidator();
+        gameHistory = new ArrayList<>();
+        difficulty = GameDifficulty.NORMAL;
+    }
+
+    public void playRound(String playerChoice) {
+        String computerChoice = generateComputerMove();
+        String winner = validator.validateAndGetWinner(playerChoice, computerChoice);
+        updateScore(winner);
+        GameRound round = new GameRound(playerChoice, computerChoice, winner);
+        gameHistory.add(round);
+        setChanged();
+        notifyObservers(round);
+    }
+
+    private String generateComputerMove() {
+        return switch(difficulty) {
+            case EASY -> generateEasyMove();
+            case NORMAL -> generateNormalMove();
+            case HARD -> generateHardMove();
+        };
+    }
+}
+
+// View Class with Animations
+class GameView extends JFrame {
+    private AnimatedButton rockBtn, paperBtn, scissorsBtn;
+    private JLabel scoreLabel;
+    private JPanel gameHistoryPanel;
+    private SoundManager soundManager;
+
+    public GameView() {
+        setupUI();
+        setupAnimations();
+        setupSoundEffects();
+    }
+
+    private void setupUI() {
+        setLayout(new BorderLayout());
+        setupGameControls();
+        setupScoreDisplay();
+        setupHistoryPanel();
+        setupDifficultyControls();
+    }
+
+    private void setupAnimations() {
+        Timer animationTimer = new Timer(50, e -> updateAnimations());
+        animationTimer.start();
+    }
+}
+
+// Controller Class
+class GameController implements ActionListener {
+    private final GameModel model;
+    private final GameView view;
+    private final StatisticsManager statsManager;
+
+    public GameController(GameModel model, GameView view) {
+        this.model = model;
+        this.view = view;
+        this.statsManager = new StatisticsManager();
+        attachListeners();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        try {
+            handleGameAction(e);
+        } catch (Exception ex) {
+            LOGGER.warning("Error in game action: " + ex.getMessage());
+            view.showError("Game Error", ex.getMessage());
+        }
+    }
+}
+
+// Innovative Features
+class AnimatedButton extends JButton {
+    private float scale = 1.0f;
+    private boolean isAnimating = false;
+
+    public AnimatedButton(String text, ImageIcon icon) {
+        super(text, icon);
+        setupAnimation();
+    }
+
+    private void setupAnimation() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                startAnimation();
+            }
+        });
+    }
+}
+
+class SoundManager {
+    private Map<String, Clip> soundEffects;
+    
+    public SoundManager() {
+        soundEffects = new HashMap<>();
+        loadSoundEffects();
+    }
+
+    public void playSound(String soundName) {
+        Optional.ofNullable(soundEffects.get(soundName))
+               .ifPresent(clip -> {
+                   clip.setFramePosition(0);
+                   clip.start();
+               });
+    }
+}
+
+class StatisticsManager {
+    private Map<String, Integer> moveStats;
+    private Map<String, Integer> winStats;
+
+    public void updateStats(GameRound round) {
+        moveStats.merge(round.getPlayerMove(), 1, Integer::sum);
+        winStats.merge(round.getWinner(), 1, Integer::sum);
+    }
+
+    public Map<String, Double> calculateWinRates() {
+        return winStats.entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> (double) e.getValue() / getTotalGames()
+            ));
+    }
+}
+
+enum GameDifficulty {
+    EASY, NORMAL, HARD
+}
+
+record GameRound(String playerMove, String computerMove, String winner) {
+    public String getPlayerMove() { return playerMove; }
+    public String getWinner() { return winner; }
+}

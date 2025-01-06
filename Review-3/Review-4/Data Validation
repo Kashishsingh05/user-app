@@ -1,0 +1,117 @@
+import javax.swing.*;
+import java.util.*;
+
+public class DataValidator {
+    private static final Set<String> VALID_MOVES = new HashSet<>(Arrays.asList("rock", "paper", "scissors"));
+    private int playerScore;
+    private int computerScore;
+    private int currentRound;
+    private static final int MAX_ROUNDS = 5;
+
+    public DataValidator() {
+        this.playerScore = 0;
+        this.computerScore = 0;
+        this.currentRound = 1;
+    }
+
+    // Input Validation
+    public boolean validateMove(String move) {
+        if (move == null || move.trim().isEmpty()) {
+            throw new IllegalArgumentException("Move cannot be empty");
+        }
+        return VALID_MOVES.contains(move.toLowerCase());
+    }
+
+    public String validateAndProcessMove(String playerMove) {
+        if (!validateMove(playerMove)) {
+            throw new IllegalArgumentException("Invalid move: " + playerMove);
+        }
+        return playerMove.toLowerCase();
+    }
+
+    // Game State Validation
+    public boolean validateGameState() {
+        if (currentRound > MAX_ROUNDS) {
+            throw new IllegalStateException("Game has ended. Max rounds reached.");
+        }
+        if (playerScore < 0 || computerScore < 0) {
+            throw new IllegalStateException("Invalid score detected");
+        }
+        if (playerScore > MAX_ROUNDS || computerScore > MAX_ROUNDS) {
+            throw new IllegalStateException("Score exceeds maximum rounds");
+        }
+        return true;
+    }
+
+    // Score Tracking Validation
+    public void updateScore(String winner) {
+        validateGameState();
+        switch (winner.toLowerCase()) {
+            case "player":
+                playerScore++;
+                break;
+            case "computer":
+                computerScore++;
+                break;
+            case "tie":
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid winner: " + winner);
+        }
+        currentRound++;
+    }
+
+    // Round Validation
+    public boolean isValidRound() {
+        return currentRound <= MAX_ROUNDS && 
+               Math.max(playerScore, computerScore) <= (MAX_ROUNDS / 2 + 1);
+    }
+
+    // Results Validation
+    public String validateAndGetWinner(String playerMove, String computerMove) {
+        playerMove = validateAndProcessMove(playerMove);
+        computerMove = validateAndProcessMove(computerMove);
+
+        if (playerMove.equals(computerMove)) {
+            return "tie";
+        }
+
+        Map<String, String> wins = new HashMap<>();
+        wins.put("rock", "scissors");
+        wins.put("scissors", "paper");
+        wins.put("paper", "rock");
+
+        return wins.get(playerMove).equals(computerMove) ? "player" : "computer";
+    }
+
+    // Score Retrieval with Validation
+    public int getPlayerScore() {
+        validateGameState();
+        return playerScore;
+    }
+
+    public int getComputerScore() {
+        validateGameState();
+        return computerScore;
+    }
+
+    public int getCurrentRound() {
+        validateGameState();
+        return currentRound;
+    }
+
+    // Game End Validation
+    public boolean isGameOver() {
+        return currentRound > MAX_ROUNDS || 
+               playerScore > MAX_ROUNDS/2 || 
+               computerScore > MAX_ROUNDS/2;
+    }
+
+    // Reset Game State with Validation
+    public void resetGame() {
+        playerScore = 0;
+        computerScore = 0;
+        currentRound = 1;
+        validateGameState();
+    }
+}
